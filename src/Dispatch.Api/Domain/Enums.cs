@@ -4,7 +4,7 @@ public enum UnitType
 {
     Ambulance,
     Fire,
-    Police
+    Police,
 }
 
 public enum UnitStatus
@@ -12,7 +12,7 @@ public enum UnitStatus
     Available,
     Dispatched,
     OnScene,
-    OutOfService
+    OutOfService,
 }
 
 public enum IncidentPriority
@@ -20,7 +20,7 @@ public enum IncidentPriority
     Low,
     Medium,
     High,
-    Critical
+    Critical,
 }
 
 public enum IncidentStatus
@@ -28,5 +28,5 @@ public enum IncidentStatus
     New,
     Dispatched,
     OnScene,
-    Closed
+    Closed,
 }

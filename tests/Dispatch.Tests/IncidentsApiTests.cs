@@ -15,7 +15,10 @@ public class IncidentsApiTests(DispatchApiFactory factory) : IClassFixture<Dispa
         var unit = await CreateUnitAsync();
         var incident = await CreateIncidentAsync();
 
-        var response = await _client.PostAsJsonAsync($"api/incidents/{incident.Id}/assignments", new AssignUnitRequest(unit.Id));
+        var response = await _client.PostAsJsonAsync(
+            $"api/incidents/{incident.Id}/assignments",
+            new AssignUnitRequest(unit.Id)
+        );
 
         response.EnsureSuccessStatusCode();
         var updated = await ReadAsync<IncidentResponse>(response);
@@ -30,9 +33,15 @@ public class IncidentsApiTests(DispatchApiFactory factory) : IClassFixture<Dispa
         var unit = await CreateUnitAsync();
         var first = await CreateIncidentAsync();
         var second = await CreateIncidentAsync();
-        await _client.PostAsJsonAsync($"api/incidents/{first.Id}/assignments", new AssignUnitRequest(unit.Id));
+        await _client.PostAsJsonAsync(
+            $"api/incidents/{first.Id}/assignments",
+            new AssignUnitRequest(unit.Id)
+        );
 
-        var response = await _client.PostAsJsonAsync($"api/incidents/{second.Id}/assignments", new AssignUnitRequest(unit.Id));
+        var response = await _client.PostAsJsonAsync(
+            $"api/incidents/{second.Id}/assignments",
+            new AssignUnitRequest(unit.Id)
+        );
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
@@ -42,13 +51,18 @@ public class IncidentsApiTests(DispatchApiFactory factory) : IClassFixture<Dispa
     {
         var unit = await CreateUnitAsync();
         var incident = await CreateIncidentAsync();
-        await _client.PostAsJsonAsync($"api/incidents/{incident.Id}/assignments", new AssignUnitRequest(unit.Id));
+        await _client.PostAsJsonAsync(
+            $"api/incidents/{incident.Id}/assignments",
+            new AssignUnitRequest(unit.Id)
+        );
 
         var onScene = await ChangeStatusAsync(incident.Id, IncidentStatus.OnScene);
         onScene.EnsureSuccessStatusCode();
         Assert.Equal(UnitStatus.OnScene, (await GetUnitAsync(unit.Id)).Status);
 
-        var closed = await ReadAsync<IncidentResponse>(await ChangeStatusAsync(incident.Id, IncidentStatus.Closed));
+        var closed = await ReadAsync<IncidentResponse>(
+            await ChangeStatusAsync(incident.Id, IncidentStatus.Closed)
+        );
         Assert.Equal(IncidentStatus.Closed, closed.Status);
         Assert.NotNull(closed.ClosedAt);
         Assert.NotNull(Assert.Single(closed.Assignments).ReleasedAt);
@@ -72,7 +86,10 @@ public class IncidentsApiTests(DispatchApiFactory factory) : IClassFixture<Dispa
         var incident = await CreateIncidentAsync();
         await ChangeStatusAsync(incident.Id, IncidentStatus.Closed);
 
-        var response = await _client.PostAsJsonAsync($"api/incidents/{incident.Id}/assignments", new AssignUnitRequest(unit.Id));
+        var response = await _client.PostAsJsonAsync(
+            $"api/incidents/{incident.Id}/assignments",
+            new AssignUnitRequest(unit.Id)
+        );
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
@@ -80,8 +97,11 @@ public class IncidentsApiTests(DispatchApiFactory factory) : IClassFixture<Dispa
     [Fact]
     public async Task Invalid_incident_returns_validation_problem()
     {
-        var response = await _client.PostAsJsonAsync("api/incidents",
-            new CreateIncidentRequest("", null, "Brno", IncidentPriority.High), DispatchApiFactory.Json);
+        var response = await _client.PostAsJsonAsync(
+            "api/incidents",
+            new CreateIncidentRequest("", null, "Brno", IncidentPriority.High),
+            DispatchApiFactory.Json
+        );
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
@@ -99,8 +119,11 @@ public class IncidentsApiTests(DispatchApiFactory factory) : IClassFixture<Dispa
     {
         var unit = await CreateUnitAsync();
 
-        var response = await _client.PostAsJsonAsync("api/units",
-            new CreateUnitRequest(unit.CallSign, UnitType.Fire), DispatchApiFactory.Json);
+        var response = await _client.PostAsJsonAsync(
+            "api/units",
+            new CreateUnitRequest(unit.CallSign, UnitType.Fire),
+            DispatchApiFactory.Json
+        );
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
@@ -130,11 +153,14 @@ public class IncidentsApiTests(DispatchApiFactory factory) : IClassFixture<Dispa
 
         var result = await GetIncidentsAsync("?status=New&priority=Critical");
 
-        Assert.All(result, i =>
-        {
-            Assert.Equal(IncidentStatus.New, i.Status);
-            Assert.Equal(IncidentPriority.Critical, i.Priority);
-        });
+        Assert.All(
+            result,
+            i =>
+            {
+                Assert.Equal(IncidentStatus.New, i.Status);
+                Assert.Equal(IncidentPriority.Critical, i.Priority);
+            }
+        );
         Assert.Contains(result, i => i.Id == critical.Id);
         Assert.DoesNotContain(result, i => i.Id == low.Id);
     }
@@ -150,24 +176,39 @@ public class IncidentsApiTests(DispatchApiFactory factory) : IClassFixture<Dispa
     private async Task<UnitResponse> CreateUnitAsync()
     {
         var callSign = $"RZP {Random.Shared.Next(100, 99999)}";
-        var response = await _client.PostAsJsonAsync("api/units",
-            new CreateUnitRequest(callSign, UnitType.Ambulance), DispatchApiFactory.Json);
+        var response = await _client.PostAsJsonAsync(
+            "api/units",
+            new CreateUnitRequest(callSign, UnitType.Ambulance),
+            DispatchApiFactory.Json
+        );
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         return await ReadAsync<UnitResponse>(response);
     }
 
-    private async Task<IncidentResponse> CreateIncidentAsync(IncidentPriority priority = IncidentPriority.High)
+    private async Task<IncidentResponse> CreateIncidentAsync(
+        IncidentPriority priority = IncidentPriority.High
+    )
     {
-        var response = await _client.PostAsJsonAsync("api/incidents",
-            new CreateIncidentRequest("Dopravní nehoda", "Dvě osobní auta", "Brno, Hlinky 12", priority),
-            DispatchApiFactory.Json);
+        var response = await _client.PostAsJsonAsync(
+            "api/incidents",
+            new CreateIncidentRequest(
+                "Dopravní nehoda",
+                "Dvě osobní auta",
+                "Brno, Hlinky 12",
+                priority
+            ),
+            DispatchApiFactory.Json
+        );
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         return await ReadAsync<IncidentResponse>(response);
     }
 
     private Task<HttpResponseMessage> ChangeStatusAsync(int incidentId, IncidentStatus status) =>
-        _client.PutAsJsonAsync($"api/incidents/{incidentId}/status",
-            new ChangeIncidentStatusRequest(status), DispatchApiFactory.Json);
+        _client.PutAsJsonAsync(
+            $"api/incidents/{incidentId}/status",
+            new ChangeIncidentStatusRequest(status),
+            DispatchApiFactory.Json
+        );
 
     private async Task<List<IncidentResponse>> GetIncidentsAsync(string query)
     {

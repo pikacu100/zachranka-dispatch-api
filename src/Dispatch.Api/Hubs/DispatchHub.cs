@@ -19,9 +19,12 @@ public interface IDispatchNotifier
     Task IncidentUpdatedAsync(IncidentResponse incident);
 }
 
-public class SignalRDispatchNotifier(IHubContext<DispatchHub, IDispatchClient> hub) : IDispatchNotifier
+public class SignalRDispatchNotifier(IHubContext<DispatchHub, IDispatchClient> hub)
+    : IDispatchNotifier
 {
-    public Task IncidentCreatedAsync(IncidentResponse incident) => hub.Clients.All.IncidentCreated(incident);
+    public Task IncidentCreatedAsync(IncidentResponse incident) =>
+        hub.Clients.All.IncidentCreated(incident);
 
-    public Task IncidentUpdatedAsync(IncidentResponse incident) => hub.Clients.All.IncidentUpdated(incident);
+    public Task IncidentUpdatedAsync(IncidentResponse incident) =>
+        hub.Clients.All.IncidentUpdated(incident);
 }

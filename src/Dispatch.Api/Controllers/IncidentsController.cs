@@ -19,8 +19,11 @@ public class IncidentsController(IncidentService incidents) : ControllerBase
     /// <param name="status">Status of the incidents</param>
     /// <param name="priority">Priority of incidents</param>
     [HttpGet]
-    public Task<IReadOnlyList<IncidentResponse>> GetAll([FromQuery] IncidentStatus? status, [FromQuery] IncidentPriority? priority, CancellationToken ct) =>
-        incidents.GetAllAsync(ct: ct, status: status, priority: priority);
+    public Task<IReadOnlyList<IncidentResponse>> GetAll(
+        [FromQuery] IncidentStatus? status,
+        [FromQuery] IncidentPriority? priority,
+        CancellationToken ct
+    ) => incidents.GetAllAsync(ct: ct, status: status, priority: priority);
 
     /// <summary>
     /// Returns one incident with its assigned units.
@@ -30,8 +33,7 @@ public class IncidentsController(IncidentService incidents) : ControllerBase
     /// <response code="404">The incident doesn't exist.</response>
     [HttpGet("{id:int}")]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public Task<IncidentResponse> Get(int id, CancellationToken ct) =>
-        incidents.GetAsync(id, ct);
+    public Task<IncidentResponse> Get(int id, CancellationToken ct) => incidents.GetAsync(id, ct);
 
     /// <summary>
     /// Creates a new incident in the <c>New</c> state and notifies connected dispatchers over SignalR.
@@ -42,7 +44,10 @@ public class IncidentsController(IncidentService incidents) : ControllerBase
     /// <response code="400">The request failed validation (e.g. missing title or address).</response>
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
-    public async Task<ActionResult<IncidentResponse>> Create(CreateIncidentRequest request, CancellationToken ct)
+    public async Task<ActionResult<IncidentResponse>> Create(
+        CreateIncidentRequest request,
+        CancellationToken ct
+    )
     {
         var incident = await incidents.CreateAsync(request, ct);
         return CreatedAtAction(nameof(Get), new { id = incident.Id }, incident);
@@ -60,8 +65,11 @@ public class IncidentsController(IncidentService incidents) : ControllerBase
     [HttpPost("{id:int}/assignments")]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public Task<IncidentResponse> AssignUnit(int id, AssignUnitRequest request, CancellationToken ct) =>
-        incidents.AssignUnitAsync(id, request.UnitId, ct);
+    public Task<IncidentResponse> AssignUnit(
+        int id,
+        AssignUnitRequest request,
+        CancellationToken ct
+    ) => incidents.AssignUnitAsync(id, request.UnitId, ct);
 
     /// <summary>
     /// Changes the incident state. <c>OnScene</c> moves its units on scene;
@@ -75,7 +83,9 @@ public class IncidentsController(IncidentService incidents) : ControllerBase
     [HttpPut("{id:int}/status")]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public Task<IncidentResponse> ChangeStatus(int id, ChangeIncidentStatusRequest request, CancellationToken ct) =>
-        incidents.ChangeStatusAsync(id, request.Status, ct);
-
+    public Task<IncidentResponse> ChangeStatus(
+        int id,
+        ChangeIncidentStatusRequest request,
+        CancellationToken ct
+    ) => incidents.ChangeStatusAsync(id, request.Status, ct);
 }

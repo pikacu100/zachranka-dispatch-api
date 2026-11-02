@@ -13,10 +13,11 @@ public class DispatchApiFactory : WebApplicationFactory<Program>
 {
     public static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web)
     {
-        Converters = { new JsonStringEnumConverter() }
+        Converters = { new JsonStringEnumConverter() },
     };
 
-    private readonly string _connectionString = $"Data Source=file:dispatch-{Guid.NewGuid():N};Mode=Memory;Cache=Shared";
+    private readonly string _connectionString =
+        $"Data Source=file:dispatch-{Guid.NewGuid():N};Mode=Memory;Cache=Shared";
 
     // An in-memory SQLite database lives only while at least one connection is open.
     private readonly SqliteConnection _keepAlive;

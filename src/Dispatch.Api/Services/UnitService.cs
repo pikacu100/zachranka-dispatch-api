@@ -9,8 +9,8 @@ namespace Dispatch.Api.Services;
 public class UnitService(DispatchDbContext db)
 {
     public async Task<IReadOnlyList<UnitResponse>> GetAllAsync(CancellationToken ct) =>
-        await db.Units
-            .OrderBy(u => u.CallSign)
+        await db
+            .Units.OrderBy(u => u.CallSign)
             .Select(u => new UnitResponse(u.Id, u.CallSign, u.Type, u.Status))
             .ToListAsync(ct);
 

@@ -16,8 +16,7 @@ public class UnitsController(UnitService units) : ControllerBase
     /// </summary>
     /// <param name="ct">Cancelled when the client aborts the request.</param>
     [HttpGet]
-    public Task<IReadOnlyList<UnitResponse>> GetAll(CancellationToken ct) =>
-        units.GetAllAsync(ct);
+    public Task<IReadOnlyList<UnitResponse>> GetAll(CancellationToken ct) => units.GetAllAsync(ct);
 
     /// <summary>
     /// Returns one unit.
@@ -27,8 +26,7 @@ public class UnitsController(UnitService units) : ControllerBase
     /// <response code="404">The unit doesn't exist.</response>
     [HttpGet("{id:int}")]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public Task<UnitResponse> Get(int id, CancellationToken ct) =>
-        units.GetAsync(id, ct);
+    public Task<UnitResponse> Get(int id, CancellationToken ct) => units.GetAsync(id, ct);
 
     /// <summary>
     /// Registers a new unit. It starts as <c>Available</c>.
@@ -41,7 +39,10 @@ public class UnitsController(UnitService units) : ControllerBase
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
-    public async Task<ActionResult<UnitResponse>> Create(CreateUnitRequest request, CancellationToken ct)
+    public async Task<ActionResult<UnitResponse>> Create(
+        CreateUnitRequest request,
+        CancellationToken ct
+    )
     {
         var unit = await units.CreateAsync(request, ct);
         return CreatedAtAction(nameof(Get), new { id = unit.Id }, unit);

@@ -97,6 +97,16 @@ New ──(přiřazení jednotky)──> Dispatched ──> OnScene ──> Clos
 - **Notifikace přes rozhraní** `IDispatchNotifier`. Servisy nezávisí přímo na SignalR a v testech jde notifikace nahradit.
 - **`TimeProvider`** místo `DateTime.Now`, aby šel čas v testech řídit.
 
+## Formátování
+
+Kód formátuje [CSharpier](https://csharpier.com). Ve VS Code a Cursoru se formátuje při každém uložení (rozšíření `csharpier.csharpier-vscode`, nastavení v `.vscode/settings.json`). CI build shodí, pokud něco zformátované není.
+
+```bash
+dotnet tool restore
+dotnet csharpier format .   # zformátuje vše
+dotnet csharpier check .    # jen kontrola, jako v CI
+```
+
 ## Přidání migrace
 
 ```bash

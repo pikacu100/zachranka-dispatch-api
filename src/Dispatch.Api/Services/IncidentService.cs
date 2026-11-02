@@ -15,10 +15,14 @@ public class IncidentService(DispatchDbContext db, IDispatchNotifier notifier, T
         [IncidentStatus.New] = [IncidentStatus.Closed],
         [IncidentStatus.Dispatched] = [IncidentStatus.OnScene, IncidentStatus.Closed],
         [IncidentStatus.OnScene] = [IncidentStatus.Closed],
-        [IncidentStatus.Closed] = []
+        [IncidentStatus.Closed] = [],
     };
 
-    public async Task<IReadOnlyList<IncidentResponse>> GetAllAsync( IncidentStatus? status, IncidentPriority? priority, CancellationToken ct)
+    public async Task<IReadOnlyList<IncidentResponse>> GetAllAsync(
+        IncidentStatus? status,
+        IncidentPriority? priority,
+        CancellationToken ct
+    )
     {
         var query = IncidentsWithAssignments();
 
@@ -28,9 +32,7 @@ public class IncidentService(DispatchDbContext db, IDispatchNotifier notifier, T
         if (priority is not null)
             query = query.Where(i => i.Priority == priority);
 
-        var incidents = await query
-          .OrderByDescending(i => i.Id)
-          .ToListAsync(ct);
+        var incidents = await query.OrderByDescending(i => i.Id).ToListAsync(ct);
 
         return [.. incidents.Select(i => i.ToResponse())];
     }
@@ -38,7 +40,10 @@ public class IncidentService(DispatchDbContext db, IDispatchNotifier notifier, T
     public async Task<IncidentResponse> GetAsync(int id, CancellationToken ct) =>
         (await LoadAsync(id, ct)).ToResponse();
 
-    public async Task<IncidentResponse> CreateAsync(CreateIncidentRequest request, CancellationToken ct)
+    public async Task<IncidentResponse> CreateAsync(
+        CreateIncidentRequest request,
+        CancellationToken ct
+    )
     {
         var incident = new Incident
         {
@@ -46,7 +51,7 @@ public class IncidentService(DispatchDbContext db, IDispatchNotifier notifier, T
             Description = request.Description?.Trim(),
             Address = request.Address.Trim(),
             Priority = request.Priority,
-            CreatedAt = clock.GetUtcNow()
+            CreatedAt = clock.GetUtcNow(),
         };
 
         db.Incidents.Add(incident);
@@ -57,16 +62,23 @@ public class IncidentService(DispatchDbContext db, IDispatchNotifier notifier, T
         return response;
     }
 
-    public async Task<IncidentResponse> AssignUnitAsync(int incidentId, int unitId, CancellationToken ct)
+    public async Task<IncidentResponse> AssignUnitAsync(
+        int incidentId,
+        int unitId,
+        CancellationToken ct
+    )
     {
         var incident = await LoadAsync(incidentId, ct);
         if (incident.Status == IncidentStatus.Closed)
             throw new ConflictException($"Incident {incidentId} is closed.");
 
-        var unit = await db.Units.FindAsync([unitId], ct)
+        var unit =
+            await db.Units.FindAsync([unitId], ct)
             ?? throw new NotFoundException($"Unit {unitId} not found.");
         if (unit.Status != UnitStatus.Available)
-            throw new ConflictException($"Unit {unit.CallSign} is not available (status {unit.Status}).");
+            throw new ConflictException(
+                $"Unit {unit.CallSign} is not available (status {unit.Status})."
+            );
 
         incident.Assignments.Add(new Assignment { Unit = unit, AssignedAt = clock.GetUtcNow() });
         unit.Status = UnitStatus.Dispatched;
@@ -77,11 +89,17 @@ public class IncidentService(DispatchDbContext db, IDispatchNotifier notifier, T
         return await NotifyUpdatedAsync(incident);
     }
 
-    public async Task<IncidentResponse> ChangeStatusAsync(int incidentId, IncidentStatus newStatus, CancellationToken ct)
+    public async Task<IncidentResponse> ChangeStatusAsync(
+        int incidentId,
+        IncidentStatus newStatus,
+        CancellationToken ct
+    )
     {
         var incident = await LoadAsync(incidentId, ct);
         if (!AllowedTransitions[incident.Status].Contains(newStatus))
-            throw new ConflictException($"Cannot change incident status from {incident.Status} to {newStatus}.");
+            throw new ConflictException(
+                $"Cannot change incident status from {incident.Status} to {newStatus}."
+            );
 
         var activeAssignments = incident.Assignments.Where(a => a.ReleasedAt is null).ToList();
         var now = clock.GetUtcNow();

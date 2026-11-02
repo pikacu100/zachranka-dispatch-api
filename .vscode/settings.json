@@ -1,0 +1,9 @@
+{
+    // Format C# with CSharpier on every save (VS Code and Cursor read this file).
+    // Needs the "CSharpier - Code formatter" extension (csharpier.csharpier-vscode).
+    "[csharp]": {
+        "editor.defaultFormatter": "csharpier.csharpier-vscode",
+        "editor.formatOnSave": true
+    },
+    "csharpier.enableDebugLogs": false
+}

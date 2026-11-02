@@ -9,15 +9,19 @@ namespace Dispatch.Api.Data;
 public class PostgresDesignTimeFactory : IDesignTimeDbContextFactory<PostgresDispatchDbContext>
 {
     public PostgresDispatchDbContext CreateDbContext(string[] args) =>
-        new(new DbContextOptionsBuilder<PostgresDispatchDbContext>()
-            .UseNpgsql("Host=localhost;Database=dispatch")
-            .Options);
+        new(
+            new DbContextOptionsBuilder<PostgresDispatchDbContext>()
+                .UseNpgsql("Host=localhost;Database=dispatch")
+                .Options
+        );
 }
 
 public class SqlServerDesignTimeFactory : IDesignTimeDbContextFactory<SqlServerDispatchDbContext>
 {
     public SqlServerDispatchDbContext CreateDbContext(string[] args) =>
-        new(new DbContextOptionsBuilder<SqlServerDispatchDbContext>()
-            .UseSqlServer("Server=localhost;Database=dispatch")
-            .Options);
+        new(
+            new DbContextOptionsBuilder<SqlServerDispatchDbContext>()
+                .UseSqlServer("Server=localhost;Database=dispatch")
+                .Options
+        );
 }

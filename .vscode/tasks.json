@@ -24,6 +24,14 @@
             "args": ["test", "${workspaceFolder}"],
             "problemMatcher": "$msCompile",
             "group": "test"
+        },
+        {
+            "label": "format",
+            "command": "dotnet",
+            "type": "process",
+            "args": ["csharpier", "format", "."],
+            "options": { "cwd": "${workspaceFolder}" },
+            "problemMatcher": []
         }
     ]
 }

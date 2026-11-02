@@ -10,9 +10,11 @@ namespace Dispatch.Api.Data;
 /// </summary>
 public class DispatchDbContext : DbContext
 {
-    public DispatchDbContext(DbContextOptions<DispatchDbContext> options) : base(options) { }
+    public DispatchDbContext(DbContextOptions<DispatchDbContext> options)
+        : base(options) { }
 
-    protected DispatchDbContext(DbContextOptions options) : base(options) { }
+    protected DispatchDbContext(DbContextOptions options)
+        : base(options) { }
 
     public DbSet<Unit> Units => Set<Unit>();
     public DbSet<Incident> Incidents => Set<Incident>();
@@ -40,12 +42,14 @@ public class DispatchDbContext : DbContext
 
         modelBuilder.Entity<Assignment>(assignment =>
         {
-            assignment.HasOne(a => a.Incident)
+            assignment
+                .HasOne(a => a.Incident)
                 .WithMany(i => i.Assignments)
                 .HasForeignKey(a => a.IncidentId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            assignment.HasOne(a => a.Unit)
+            assignment
+                .HasOne(a => a.Unit)
                 .WithMany(u => u.Assignments)
                 .HasForeignKey(a => a.UnitId)
                 .OnDelete(DeleteBehavior.Restrict);

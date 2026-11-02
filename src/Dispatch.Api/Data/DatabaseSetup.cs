@@ -9,7 +9,10 @@ public static class DatabaseSetup
     /// Postgres, SqlServer or Sqlite (local development without Docker).
     /// The rest of the app only depends on <see cref="DispatchDbContext"/>.
     /// </summary>
-    public static IServiceCollection AddDispatchDatabase(this IServiceCollection services, IConfiguration config)
+    public static IServiceCollection AddDispatchDatabase(
+        this IServiceCollection services,
+        IConfiguration config
+    )
     {
         var provider = config["Database:Provider"] ?? "Sqlite";
 
@@ -17,17 +20,24 @@ public static class DatabaseSetup
         {
             case "Postgres":
                 services.AddDbContext<PostgresDispatchDbContext>(o =>
-                    o.UseNpgsql(config.GetConnectionString("Postgres")));
-                services.AddScoped<DispatchDbContext>(sp => sp.GetRequiredService<PostgresDispatchDbContext>());
+                    o.UseNpgsql(config.GetConnectionString("Postgres"))
+                );
+                services.AddScoped<DispatchDbContext>(sp =>
+                    sp.GetRequiredService<PostgresDispatchDbContext>()
+                );
                 break;
             case "SqlServer":
                 services.AddDbContext<SqlServerDispatchDbContext>(o =>
-                    o.UseSqlServer(config.GetConnectionString("SqlServer")));
-                services.AddScoped<DispatchDbContext>(sp => sp.GetRequiredService<SqlServerDispatchDbContext>());
+                    o.UseSqlServer(config.GetConnectionString("SqlServer"))
+                );
+                services.AddScoped<DispatchDbContext>(sp =>
+                    sp.GetRequiredService<SqlServerDispatchDbContext>()
+                );
                 break;
             case "Sqlite":
                 services.AddDbContext<DispatchDbContext>(o =>
-                    o.UseSqlite(config.GetConnectionString("Sqlite")));
+                    o.UseSqlite(config.GetConnectionString("Sqlite"))
+                );
                 break;
             default:
                 throw new InvalidOperationException($"Unknown Database:Provider '{provider}'.");

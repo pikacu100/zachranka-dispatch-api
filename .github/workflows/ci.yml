@@ -6,6 +6,17 @@ on:
   pull_request:
 
 jobs:
+  format:
+    # Fails when any file isn't formatted with CSharpier. Fix locally with: dotnet csharpier format .
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - run: dotnet tool restore
+      - run: dotnet csharpier check .
+
   test:
     runs-on: ubuntu-latest
     steps:
