@@ -39,6 +39,15 @@ docker compose --profile sqlserver up --build
 
 API nad MSSQL: http://localhost:8081/swagger. Při startu se automaticky aplikují migrace.
 
+**Skript pro Windows** (spustí Docker, počká na API a volitelně naplní ukázková data):
+
+```powershell
+.\scripts\start.ps1 -Seed              # PostgreSQL + ukázkové jednotky a výjezdy
+.\scripts\start.ps1 -SqlServer -Seed   # navíc MSSQL
+.\scripts\start.ps1 -Reset -Seed       # smaže databáze a začne znovu
+.\scripts\start.ps1 -Stop
+```
+
 **Testy:**
 
 ```bash

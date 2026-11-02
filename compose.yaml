@@ -12,6 +12,8 @@ services:
       POSTGRES_DB: dispatch
       POSTGRES_USER: dispatch
       POSTGRES_PASSWORD: dispatch
+    ports:
+      - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
@@ -37,6 +39,8 @@ services:
     environment:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: Dispatch_Passw0rd!
+    ports:
+      - "1433:1433"
     volumes:
       - sqlserver-data:/var/opt/mssql
     healthcheck:
