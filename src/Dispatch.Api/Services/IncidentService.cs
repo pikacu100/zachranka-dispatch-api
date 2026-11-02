@@ -115,6 +115,10 @@ public class IncidentService(
         switch (newStatus)
         {
             case IncidentStatus.OnScene:
+                if (activeAssignments.Count == 0)
+                    throw new ConflictException(
+                        $"Incident {incidentId} has no assigned unit that could be on scene."
+                    );
                 foreach (var assignment in activeAssignments)
                     assignment.Unit.Status = UnitStatus.OnScene;
                 break;

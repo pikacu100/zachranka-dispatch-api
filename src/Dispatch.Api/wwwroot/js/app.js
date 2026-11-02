@@ -92,9 +92,9 @@ function renderCard(incident, availableUnits) {
             `<option value="${u.id}">${escapeHtml(u.callSign)}</option>`).join("");
         actions.push(availableUnits.length
             ? `<select data-unit-select aria-label="Volná jednotka">${options}</select><button data-action="assign">Vyslat</button>`
-            : `<span class="muted">Žádná volná jednotka</span>`);
+            : `<span class="muted">${incident.assignments.some((a) => !a.releasedAt) ? "Žádná další volná jednotka" : "Žádná volná jednotka"}</span>`);
     }
-    if (incident.status === "Dispatched") actions.push(`<button data-action="status" data-status="OnScene">Na místě</button>`);
+    if (incident.status === "Dispatched") actions.push(`<button data-action="status" data-status="OnScene" title="Vyslané jednotky dorazily na místo">Na místě</button>`);
     if (incident.status === "New") actions.push(`<button class="secondary" data-action="status" data-status="Closed">Planý poplach</button>`);
     if (incident.status === "Dispatched" || incident.status === "OnScene") {
         actions.push(`<button class="secondary" data-action="status" data-status="Closed">Uzavřít</button>`);

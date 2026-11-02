@@ -1,7 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
 using Dispatch.Api.Contracts;
+using Dispatch.Api.Data;
 using Dispatch.Api.Domain;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Dispatch.Tests;
 
@@ -75,6 +77,32 @@ public class IncidentsApiTests(DispatchApiFactory factory) : IClassFixture<Dispa
         var incident = await CreateIncidentAsync();
 
         var response = await ChangeStatusAsync(incident.Id, IncidentStatus.OnScene);
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Incident_without_assigned_unit_cannot_be_on_scene()
+    {
+        // The API can't produce this state (Dispatched always comes from an assignment),
+        // so it's written straight to the database to check the rule itself.
+        int incidentId;
+        using (var scope = factory.Services.CreateScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<DispatchDbContext>();
+            var incident = new Incident
+            {
+                Title = "Bez jednotky",
+                Address = "Brno",
+                Status = IncidentStatus.Dispatched,
+                CreatedAt = DateTimeOffset.UtcNow,
+            };
+            db.Incidents.Add(incident);
+            await db.SaveChangesAsync();
+            incidentId = incident.Id;
+        }
+
+        var response = await ChangeStatusAsync(incidentId, IncidentStatus.OnScene);
 
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
