@@ -15,7 +15,8 @@ builder.Services
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<DomainExceptionHandler>();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(o =>
+    o.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, $"{typeof(Program).Assembly.GetName().Name}.xml")));
 builder.Services.AddHealthChecks().AddDbContextCheck<DispatchDbContext>();
 
 builder.Services.AddDispatchDatabase(builder.Configuration);
