@@ -1,4 +1,5 @@
 using Dispatch.Api.Contracts;
+using Dispatch.Api.Domain;
 using Dispatch.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -15,9 +16,11 @@ public class IncidentsController(IncidentService incidents) : ControllerBase
     /// Returns all incidents, newest first, including their assigned units.
     /// </summary>
     /// <param name="ct">Cancelled when the client aborts the request.</param>
+    /// <param name="status">Status of the incidents</param>
+    /// <param name="priority">Priority of incidents</param>
     [HttpGet]
-    public Task<IReadOnlyList<IncidentResponse>> GetAll(CancellationToken ct) =>
-        incidents.GetAllAsync(ct);
+    public Task<IReadOnlyList<IncidentResponse>> GetAll([FromQuery] IncidentStatus? status, [FromQuery] IncidentPriority? priority, CancellationToken ct) =>
+        incidents.GetAllAsync(ct: ct, status: status, priority: priority);
 
     /// <summary>
     /// Returns one incident with its assigned units.
@@ -74,4 +77,5 @@ public class IncidentsController(IncidentService incidents) : ControllerBase
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     public Task<IncidentResponse> ChangeStatus(int id, ChangeIncidentStatusRequest request, CancellationToken ct) =>
         incidents.ChangeStatusAsync(id, request.Status, ct);
+
 }

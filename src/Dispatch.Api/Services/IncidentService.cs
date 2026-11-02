@@ -18,13 +18,21 @@ public class IncidentService(DispatchDbContext db, IDispatchNotifier notifier, T
         [IncidentStatus.Closed] = []
     };
 
-    public async Task<IReadOnlyList<IncidentResponse>> GetAllAsync(CancellationToken ct)
+    public async Task<IReadOnlyList<IncidentResponse>> GetAllAsync( IncidentStatus? status, IncidentPriority? priority, CancellationToken ct)
     {
-        var incidents = await IncidentsWithAssignments()
-            .OrderByDescending(i => i.Id)
-            .ToListAsync(ct);
+        var query = IncidentsWithAssignments();
 
-        return incidents.Select(i => i.ToResponse()).ToList();
+        if (status is not null)
+            query = query.Where(i => i.Status == status);
+
+        if (priority is not null)
+            query = query.Where(i => i.Priority == priority);
+
+        var incidents = await query
+          .OrderByDescending(i => i.Id)
+          .ToListAsync(ct);
+
+        return [.. incidents.Select(i => i.ToResponse())];
     }
 
     public async Task<IncidentResponse> GetAsync(int id, CancellationToken ct) =>
