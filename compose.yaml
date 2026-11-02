@@ -1,0 +1,63 @@
+# PostgreSQL (default):  docker compose up --build             -> http://localhost:8080/swagger
+# MSSQL as well:         docker compose --profile sqlserver up --build -> http://localhost:8081/swagger
+
+x-api: &api
+  build: .
+  restart: unless-stopped
+
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: dispatch
+      POSTGRES_USER: dispatch
+      POSTGRES_PASSWORD: dispatch
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dispatch -d dispatch"]
+      interval: 5s
+      retries: 20
+
+  api:
+    <<: *api
+    ports:
+      - "8080:8080"
+    environment:
+      Database__Provider: Postgres
+      ConnectionStrings__Postgres: Host=postgres;Database=dispatch;Username=dispatch;Password=dispatch
+      Swagger__Enabled: "true"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    profiles: [sqlserver]
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: Dispatch_Passw0rd!
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      retries: 20
+      start_period: 20s
+
+  api-sqlserver:
+    <<: *api
+    profiles: [sqlserver]
+    ports:
+      - "8081:8080"
+    environment:
+      Database__Provider: SqlServer
+      ConnectionStrings__SqlServer: Server=sqlserver,1433;Database=dispatch;User Id=sa;Password=Dispatch_Passw0rd!;TrustServerCertificate=True
+      Swagger__Enabled: "true"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  sqlserver-data:

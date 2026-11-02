@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+      - run: dotnet restore
+      - run: dotnet build --no-restore -c Release
+      - run: dotnet test --no-build -c Release --logger "console;verbosity=normal"
+
+  docker:
+    # Builds the image and runs the API against real PostgreSQL and MSSQL containers.
+    runs-on: ubuntu-latest
+    needs: test
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - database: postgres
+            compose_args: ""
+            url: http://localhost:8080
+          - database: sqlserver
+            compose_args: --profile sqlserver
+            url: http://localhost:8081
+    name: docker (${{ matrix.database }})
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose ${{ matrix.compose_args }} up -d --build --wait
+      - run: bash scripts/smoke-test.sh ${{ matrix.url }}
+      - if: failure()
+        run: docker compose ${{ matrix.compose_args }} logs
+      - if: always()
+        run: docker compose ${{ matrix.compose_args }} down -v
