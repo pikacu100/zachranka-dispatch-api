@@ -105,6 +105,48 @@ public class IncidentsApiTests(DispatchApiFactory factory) : IClassFixture<Dispa
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
     }
 
+    // The database is shared by all tests in this class, so the filter tests check
+    // "every result matches and ours is (not) there" instead of exact counts.
+
+    [Fact]
+    public async Task Filter_by_status_returns_only_matching_incidents()
+    {
+        var open = await CreateIncidentAsync();
+        var closed = await CreateIncidentAsync();
+        await ChangeStatusAsync(closed.Id, IncidentStatus.Closed);
+
+        var result = await GetIncidentsAsync("?status=Closed");
+
+        Assert.All(result, i => Assert.Equal(IncidentStatus.Closed, i.Status));
+        Assert.Contains(result, i => i.Id == closed.Id);
+        Assert.DoesNotContain(result, i => i.Id == open.Id);
+    }
+
+    [Fact]
+    public async Task Filter_by_status_and_priority_combines_both_conditions()
+    {
+        var critical = await CreateIncidentAsync(IncidentPriority.Critical);
+        var low = await CreateIncidentAsync(IncidentPriority.Low);
+
+        var result = await GetIncidentsAsync("?status=New&priority=Critical");
+
+        Assert.All(result, i =>
+        {
+            Assert.Equal(IncidentStatus.New, i.Status);
+            Assert.Equal(IncidentPriority.Critical, i.Priority);
+        });
+        Assert.Contains(result, i => i.Id == critical.Id);
+        Assert.DoesNotContain(result, i => i.Id == low.Id);
+    }
+
+    [Fact]
+    public async Task Filter_with_unknown_status_returns_bad_request()
+    {
+        var response = await _client.GetAsync("api/incidents?status=Nonsense");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
     private async Task<UnitResponse> CreateUnitAsync()
     {
         var callSign = $"RZP {Random.Shared.Next(100, 99999)}";
@@ -114,10 +156,10 @@ public class IncidentsApiTests(DispatchApiFactory factory) : IClassFixture<Dispa
         return await ReadAsync<UnitResponse>(response);
     }
 
-    private async Task<IncidentResponse> CreateIncidentAsync()
+    private async Task<IncidentResponse> CreateIncidentAsync(IncidentPriority priority = IncidentPriority.High)
     {
         var response = await _client.PostAsJsonAsync("api/incidents",
-            new CreateIncidentRequest("Dopravní nehoda", "Dvě osobní auta", "Brno, Hlinky 12", IncidentPriority.High),
+            new CreateIncidentRequest("Dopravní nehoda", "Dvě osobní auta", "Brno, Hlinky 12", priority),
             DispatchApiFactory.Json);
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         return await ReadAsync<IncidentResponse>(response);
@@ -126,6 +168,13 @@ public class IncidentsApiTests(DispatchApiFactory factory) : IClassFixture<Dispa
     private Task<HttpResponseMessage> ChangeStatusAsync(int incidentId, IncidentStatus status) =>
         _client.PutAsJsonAsync($"api/incidents/{incidentId}/status",
             new ChangeIncidentStatusRequest(status), DispatchApiFactory.Json);
+
+    private async Task<List<IncidentResponse>> GetIncidentsAsync(string query)
+    {
+        var response = await _client.GetAsync($"api/incidents{query}");
+        response.EnsureSuccessStatusCode();
+        return await ReadAsync<List<IncidentResponse>>(response);
+    }
 
     private async Task<UnitResponse> GetUnitAsync(int id) =>
         await ReadAsync<UnitResponse>(await _client.GetAsync($"api/units/{id}"));
