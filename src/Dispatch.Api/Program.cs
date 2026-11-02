@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Dispatch.Api.Caching;
 using Dispatch.Api.Data;
 using Dispatch.Api.Errors;
 using Dispatch.Api.Hubs;
@@ -23,6 +24,8 @@ builder.Services.AddSwaggerGen(o =>
 builder.Services.AddHealthChecks().AddDbContextCheck<DispatchDbContext>();
 
 builder.Services.AddDispatchDatabase(builder.Configuration);
+builder.Services.AddDispatchOutputCache();
+builder.Services.AddSingleton<DispatchCache>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddScoped<IDispatchNotifier, SignalRDispatchNotifier>();
 builder.Services.AddScoped<IncidentService>();
@@ -38,6 +41,18 @@ if (app.Configuration.GetValue("Swagger:Enabled", app.Environment.IsDevelopment(
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+// Dispatcher board from wwwroot. "no-cache" = the browser keeps the files but revalidates
+// them with the ETag on each load, so it gets a cheap 304 until a file actually changes.
+app.UseDefaultFiles();
+app.UseStaticFiles(
+    new StaticFileOptions
+    {
+        OnPrepareResponse = ctx => ctx.Context.Response.Headers.CacheControl = "no-cache",
+    }
+);
+
+app.UseOutputCache();
 
 app.MapControllers();
 app.MapHub<DispatchHub>("/hubs/dispatch");

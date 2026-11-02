@@ -1,3 +1,4 @@
+using Dispatch.Api.Caching;
 using Dispatch.Api.Contracts;
 using Dispatch.Api.Data;
 using Dispatch.Api.Domain;
@@ -6,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Dispatch.Api.Services;
 
-public class UnitService(DispatchDbContext db)
+public class UnitService(DispatchDbContext db, DispatchCache cache)
 {
     public async Task<IReadOnlyList<UnitResponse>> GetAllAsync(CancellationToken ct) =>
         await db
@@ -27,6 +28,7 @@ public class UnitService(DispatchDbContext db)
         var unit = new Unit { CallSign = callSign, Type = request.Type };
         db.Units.Add(unit);
         await db.SaveChangesAsync(ct);
+        await cache.InvalidateUnitsAsync(ct);
         return unit.ToResponse();
     }
 }

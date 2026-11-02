@@ -1,3 +1,4 @@
+using Dispatch.Api.Caching;
 using Dispatch.Api.Contracts;
 using Dispatch.Api.Data;
 using Dispatch.Api.Domain;
@@ -7,7 +8,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Dispatch.Api.Services;
 
-public class IncidentService(DispatchDbContext db, IDispatchNotifier notifier, TimeProvider clock)
+public class IncidentService(
+    DispatchDbContext db,
+    IDispatchNotifier notifier,
+    DispatchCache cache,
+    TimeProvider clock
+)
 {
     // Allowed manual status changes. New -> Dispatched happens by assigning a unit.
     private static readonly Dictionary<IncidentStatus, IncidentStatus[]> AllowedTransitions = new()
@@ -57,6 +63,8 @@ public class IncidentService(DispatchDbContext db, IDispatchNotifier notifier, T
         db.Incidents.Add(incident);
         await db.SaveChangesAsync(ct);
 
+        // Evict before notifying, so clients that refetch on the SignalR event get fresh data.
+        await cache.InvalidateIncidentsAsync(ct);
         var response = incident.ToResponse();
         await notifier.IncidentCreatedAsync(response);
         return response;
@@ -86,7 +94,7 @@ public class IncidentService(DispatchDbContext db, IDispatchNotifier notifier, T
             incident.Status = IncidentStatus.Dispatched;
 
         await db.SaveChangesAsync(ct);
-        return await NotifyUpdatedAsync(incident);
+        return await NotifyUpdatedAsync(incident, ct);
     }
 
     public async Task<IncidentResponse> ChangeStatusAsync(
@@ -122,7 +130,7 @@ public class IncidentService(DispatchDbContext db, IDispatchNotifier notifier, T
 
         incident.Status = newStatus;
         await db.SaveChangesAsync(ct);
-        return await NotifyUpdatedAsync(incident);
+        return await NotifyUpdatedAsync(incident, ct);
     }
 
     private IQueryable<Incident> IncidentsWithAssignments() =>
@@ -132,8 +140,11 @@ public class IncidentService(DispatchDbContext db, IDispatchNotifier notifier, T
         await IncidentsWithAssignments().FirstOrDefaultAsync(i => i.Id == id, ct)
         ?? throw new NotFoundException($"Incident {id} not found.");
 
-    private async Task<IncidentResponse> NotifyUpdatedAsync(Incident incident)
+    // Assigning and status changes also change unit statuses, so both caches go.
+    private async Task<IncidentResponse> NotifyUpdatedAsync(Incident incident, CancellationToken ct)
     {
+        await cache.InvalidateIncidentsAsync(ct);
+        await cache.InvalidateUnitsAsync(ct);
         var response = incident.ToResponse();
         await notifier.IncidentUpdatedAsync(response);
         return response;

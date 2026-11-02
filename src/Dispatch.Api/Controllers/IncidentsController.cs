@@ -1,7 +1,9 @@
+using Dispatch.Api.Caching;
 using Dispatch.Api.Contracts;
 using Dispatch.Api.Domain;
 using Dispatch.Api.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 
 namespace Dispatch.Api.Controllers;
 
@@ -18,6 +20,7 @@ public class IncidentsController(IncidentService incidents) : ControllerBase
     /// <param name="ct">Cancelled when the client aborts the request.</param>
     /// <param name="status">Status of the incidents</param>
     /// <param name="priority">Priority of incidents</param>
+    [OutputCache(PolicyName = CachePolicies.Incidents)]
     [HttpGet]
     public Task<IReadOnlyList<IncidentResponse>> GetAll(
         [FromQuery] IncidentStatus? status,
@@ -31,6 +34,7 @@ public class IncidentsController(IncidentService incidents) : ControllerBase
     /// <param name="id">Incident ID.</param>
     /// <param name="ct">Cancelled when the client aborts the request.</param>
     /// <response code="404">The incident doesn't exist.</response>
+    [OutputCache(PolicyName = CachePolicies.Incidents)]
     [HttpGet("{id:int}")]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public Task<IncidentResponse> Get(int id, CancellationToken ct) => incidents.GetAsync(id, ct);

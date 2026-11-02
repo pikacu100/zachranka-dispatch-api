@@ -1,6 +1,8 @@
+using Dispatch.Api.Caching;
 using Dispatch.Api.Contracts;
 using Dispatch.Api.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OutputCaching;
 
 namespace Dispatch.Api.Controllers;
 
@@ -15,6 +17,7 @@ public class UnitsController(UnitService units) : ControllerBase
     /// Returns all units ordered by call sign, with their current status.
     /// </summary>
     /// <param name="ct">Cancelled when the client aborts the request.</param>
+    [OutputCache(PolicyName = CachePolicies.Units)]
     [HttpGet]
     public Task<IReadOnlyList<UnitResponse>> GetAll(CancellationToken ct) => units.GetAllAsync(ct);
 
@@ -24,6 +27,7 @@ public class UnitsController(UnitService units) : ControllerBase
     /// <param name="id">Unit ID.</param>
     /// <param name="ct">Cancelled when the client aborts the request.</param>
     /// <response code="404">The unit doesn't exist.</response>
+    [OutputCache(PolicyName = CachePolicies.Units)]
     [HttpGet("{id:int}")]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public Task<UnitResponse> Get(int id, CancellationToken ct) => units.GetAsync(id, ct);

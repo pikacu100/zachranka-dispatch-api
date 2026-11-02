@@ -9,6 +9,8 @@ Ukázková backendová služba pro dispečink záchranných složek: evidence v�
 - **ASP.NET Core 9 Web API** (controllery, validace přes DataAnnotations, chyby jako ProblemDetails, Swagger)
 - **Entity Framework Core 9** s migracemi pro **PostgreSQL** i **MSSQL**; poskytovatel se volí v konfiguraci
 - **SignalR**: hub `/hubs/dispatch` posílá klientům události `IncidentCreated` a `IncidentUpdated`
+- **Output cache**: GET endpointy se cachují a každý zápis cache okamžitě invaliduje podle tagů
+- **Dispečerská nástěnka**: čisté HTML + JavaScript ve `wwwroot`, živé aktualizace přes SignalR
 - **Docker**: multi-stage Dockerfile (běží jako non-root uživatel) a `compose.yaml` s PostgreSQL a volitelně MSSQL
 - **xUnit**: integrační testy přes `WebApplicationFactory` nad SQLite v paměti, včetně testu SignalR
 - **GitHub Actions**: build a testy, potom sestavení image a smoke test proti skutečnému PostgreSQL i MSSQL
@@ -87,6 +89,18 @@ New ──(přiřazení jednotky)──> Dispatched ──> OnScene ──> Clos
 - Přiřadit lze jen jednotku ve stavu `Available` a jen k neuzavřenému výjezdu. Jinak API vrátí `409 Conflict`.
 - `OnScene` přepne přiřazené jednotky na `OnScene`.
 - `Closed` uvolní jednotky zpět na `Available` a zapíše čas uvolnění i uzavření.
+
+## Dispečerská nástěnka
+
+Po spuštění API otevři http://localhost:5007/ (v Dockeru http://localhost:8080/). Výjezdy jsou ve sloupcích podle stavu, jednotky jdou vyslat přímo z kartičky a nové výjezdy se zakládají formulářem vpravo. Když otevřeš dvě okna, změna v jednom se hned ukáže i ve druhém (SignalR).
+
+Frontend nemá build ani npm závislosti. Klient SignalR je přibalený ve `wwwroot/lib/signalr`.
+
+## Cache
+
+- **API (output cache):** `GET /api/incidents` a `GET /api/units` se cachují v paměti, každý filtr (`?status=`, `?priority=`) zvlášť. Každý zápis smaže dotčené tagy (`incidents`, `units`) ještě **před** odesláním SignalR události, takže klienti, kteří si po události data znovu stáhnou, dostanou vždy aktuální stav. Odpověď z cache poznáš podle hlavičky `Age`.
+- **Statické soubory:** `Cache-Control: no-cache` + `ETag`. Prohlížeč si soubory nechá a při dalším načtení dostane jen `304 Not Modified`, dokud se nezmění.
+- **Omezení:** cache je v paměti jedné instance. Při běhu více instancí za load balancerem by bylo potřeba sdílené úložiště (Redis), jinak by jedna instance neviděla invalidaci druhé.
 
 ## Architektonická rozhodnutí
 

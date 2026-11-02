@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="cs">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Záchranka Dispatch</title>
+    <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<header class="topbar">
+    <h1>Záchranka Dispatch</h1>
+    <div class="topbar-right">
+        <label class="filter">
+            Priorita
+            <select id="priority-filter">
+                <option value="">Všechny</option>
+                <option value="Critical">Kritická</option>
+                <option value="High">Vysoká</option>
+                <option value="Medium">Střední</option>
+                <option value="Low">Nízká</option>
+            </select>
+        </label>
+        <span id="connection" class="connection connecting" title="Živé aktualizace přes SignalR">Připojuji…</span>
+        <a class="swagger-link" href="swagger">API</a>
+    </div>
+</header>
+
+<main class="layout">
+    <section class="board" aria-label="Výjezdy podle stavu">
+        <div class="column" data-status="New"><h2>Nové <span class="count"></span></h2><div class="cards"></div></div>
+        <div class="column" data-status="Dispatched"><h2>Vyslané <span class="count"></span></h2><div class="cards"></div></div>
+        <div class="column" data-status="OnScene"><h2>Na místě <span class="count"></span></h2><div class="cards"></div></div>
+        <div class="column" data-status="Closed"><h2>Uzavřené <span class="count"></span></h2><div class="cards"></div></div>
+    </section>
+
+    <aside class="sidebar">
+        <form id="incident-form" class="panel">
+            <h2>Nový výjezd</h2>
+            <label>Událost <input name="title" required minlength="3" maxlength="200" placeholder="Dopravní nehoda"></label>
+            <label>Adresa <input name="address" required minlength="3" maxlength="300" placeholder="Brno, Hlinky 12"></label>
+            <label>Popis <textarea name="description" maxlength="2000" rows="2" placeholder="Nepovinné"></textarea></label>
+            <label>Priorita
+                <select name="priority">
+                    <option value="Critical">Kritická</option>
+                    <option value="High" selected>Vysoká</option>
+                    <option value="Medium">Střední</option>
+                    <option value="Low">Nízká</option>
+                </select>
+            </label>
+            <button type="submit">Založit výjezd</button>
+        </form>
+
+        <section class="panel">
+            <h2>Jednotky <span id="units-summary" class="muted"></span></h2>
+            <ul id="units" class="units"></ul>
+        </section>
+    </aside>
+</main>
+
+<div id="toast" class="toast" role="alert" hidden></div>
+
+<script src="lib/signalr/signalr.min.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
