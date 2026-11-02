@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "API (SQLite)",
+            "name": "Local API + SQLite",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
@@ -21,8 +21,8 @@
             }
         },
         {
-            // Needs the Postgres container: .\scripts\start.ps1 (or: docker compose up -d postgres)
-            "name": "API (PostgreSQL v Dockeru)",
+            // API runs here with the debugger (port 5007); only the database is in Docker: docker compose up -d postgres
+            "name": "Local API + PostgreSQL (Docker)",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
@@ -43,7 +43,7 @@
         },
         {
             // SQL Server LocalDB, already installed on this PC; the database is created by migrations
-            "name": "API (MSSQL LocalDB)",
+            "name": "Local API + MSSQL LocalDB",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
@@ -63,7 +63,7 @@
             }
         },
         {
-            "name": "Připojit k běžícímu procesu",
+            "name": "Attach to running process",
             "type": "coreclr",
             "request": "attach"
         }
