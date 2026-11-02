@@ -23,28 +23,39 @@ Set-Location (Split-Path $PSScriptRoot -Parent)
 $profileArgs = @('--profile', 'sqlserver')
 if (-not $SqlServer) { $profileArgs = @() }
 
+# Docker writes progress to stderr. With $ErrorActionPreference = 'Stop', Windows PowerShell 5.1
+# turns those lines into terminating errors when output is redirected, so run docker with
+# 'Continue' and rely on its exit code instead.
+function Invoke-Docker {
+    $ErrorActionPreference = 'Continue'
+    & docker @args
+    if ($LASTEXITCODE -ne 0) { throw "docker $($args -join ' ') failed (exit code $LASTEXITCODE)." }
+}
+
 if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
     throw "Docker is not installed. Install Docker Desktop (winget install Docker.DockerDesktop), restart, and run this again."
 }
 
+$ErrorActionPreference = 'Continue'
 docker info *> $null
-if ($LASTEXITCODE -ne 0) {
+$dockerRunning = $LASTEXITCODE -eq 0
+$ErrorActionPreference = 'Stop'
+if (-not $dockerRunning) {
     throw "Docker is not running. Start Docker Desktop and wait until it says 'Engine running'."
 }
 
 if ($Stop) {
-    docker compose --profile sqlserver down
+    Invoke-Docker compose --profile sqlserver down
     return
 }
 
 if ($Reset) {
     Write-Host "Deleting containers and database volumes..."
-    docker compose --profile sqlserver down -v
+    Invoke-Docker compose --profile sqlserver down -v
 }
 
 Write-Host "Building and starting containers (the first run downloads images and takes a few minutes)..."
-docker compose @profileArgs up -d --build --wait
-if ($LASTEXITCODE -ne 0) { throw "docker compose up failed. See: docker compose logs" }
+Invoke-Docker compose @profileArgs up -d --build --wait
 
 function Wait-Healthy([string]$baseUrl) {
     for ($i = 0; $i -lt 60; $i++) {
@@ -74,8 +85,8 @@ foreach ($api in $apis) {
 
 Write-Host ""
 Write-Host "Running:"
-Write-Host "  PostgreSQL API: http://localhost:8080/swagger   (DB: localhost:5432, user/password/db = dispatch)"
+Write-Host "  PostgreSQL: board http://localhost:8080/   API http://localhost:8080/swagger   (DB localhost:5432, user/password/db = dispatch)"
 if ($SqlServer) {
-    Write-Host "  MSSQL API:      http://localhost:8081/swagger   (DB: localhost,1433, sa / Dispatch_Passw0rd!)"
+    Write-Host "  MSSQL:      board http://localhost:8081/   API http://localhost:8081/swagger   (DB localhost,1433, sa / Dispatch_Passw0rd!)"
 }
 Write-Host "Stop with: .\scripts\start.ps1 -Stop"
