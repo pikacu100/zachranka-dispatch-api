@@ -1,0 +1,71 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "API (SQLite)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/src/Dispatch.Api/bin/Debug/net9.0/Dispatch.Api.dll",
+            "cwd": "${workspaceFolder}/src/Dispatch.Api",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+                "uriFormat": "%s/swagger"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "ASPNETCORE_URLS": "http://localhost:5007",
+                "Database__Provider": "Sqlite"
+            }
+        },
+        {
+            // Needs the Postgres container: .\scripts\start.ps1 (or: docker compose up -d postgres)
+            "name": "API (PostgreSQL v Dockeru)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/src/Dispatch.Api/bin/Debug/net9.0/Dispatch.Api.dll",
+            "cwd": "${workspaceFolder}/src/Dispatch.Api",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+                "uriFormat": "%s/swagger"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "ASPNETCORE_URLS": "http://localhost:5007",
+                "Database__Provider": "Postgres",
+                "ConnectionStrings__Postgres": "Host=localhost;Port=5432;Database=dispatch;Username=dispatch;Password=dispatch"
+            }
+        },
+        {
+            // SQL Server LocalDB, already installed on this PC; the database is created by migrations
+            "name": "API (MSSQL LocalDB)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/src/Dispatch.Api/bin/Debug/net9.0/Dispatch.Api.dll",
+            "cwd": "${workspaceFolder}/src/Dispatch.Api",
+            "stopAtEntry": false,
+            "serverReadyAction": {
+                "action": "openExternally",
+                "pattern": "\\bNow listening on:\\s+(https?://\\S+)",
+                "uriFormat": "%s/swagger"
+            },
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "ASPNETCORE_URLS": "http://localhost:5007",
+                "Database__Provider": "SqlServer",
+                "ConnectionStrings__SqlServer": "Server=(localdb)\\MSSQLLocalDB;Database=dispatch;Trusted_Connection=True;TrustServerCertificate=True"
+            }
+        },
+        {
+            "name": "Připojit k běžícímu procesu",
+            "type": "coreclr",
+            "request": "attach"
+        }
+    ]
+}
