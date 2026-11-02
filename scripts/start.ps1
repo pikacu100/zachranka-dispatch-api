@@ -1,7 +1,7 @@
 ﻿<#
 .SYNOPSIS
   Starts the API and database in Docker. Migrations create the database schema
-  on API startup; -Seed then fills it with sample units and incidents.
+  on API startup; -Seed then fills it with sample data via scripts\seed.ps1.
 
 .EXAMPLE
   .\scripts\start.ps1               # PostgreSQL, http://localhost:8080/swagger
@@ -61,34 +61,7 @@ function Add-SampleData([string]$baseUrl) {
         Write-Host "  $baseUrl already has data, skipping seed (use -Reset to start fresh)."
         return
     }
-
-    $units = @(
-        @{ callSign = 'RZP 101'; type = 'Ambulance' },
-        @{ callSign = 'RZP 102'; type = 'Ambulance' },
-        @{ callSign = 'RLP 201'; type = 'Ambulance' },
-        @{ callSign = 'HZS CAS 30'; type = 'Fire' },
-        @{ callSign = 'PCR 301'; type = 'Police' }
-    ) | ForEach-Object { Invoke-RestMethod "$baseUrl/api/units" -Method Post -ContentType 'application/json' -Body ($_ | ConvertTo-Json) }
-
-    $incidents = @(
-        @{ title = 'Dopravní nehoda, 2 osobní auta'; address = 'Brno, Hlinky 12'; priority = 'High' },
-        @{ title = 'Bolest na hrudi, muž 65 let'; address = 'Žďár nad Sázavou, Nádražní 5'; priority = 'Critical' },
-        @{ title = 'Požár kontejneru'; address = 'Olomouc, Masarykova 20'; priority = 'Medium' },
-        @{ title = 'Pád z kola, odřeniny'; address = 'Jihlava, Masarykovo nám. 1'; priority = 'Low' }
-    ) | ForEach-Object { Invoke-RestMethod "$baseUrl/api/incidents" -Method Post -ContentType 'application/json; charset=utf-8' -Body ([Text.Encoding]::UTF8.GetBytes(($_ | ConvertTo-Json))) }
-
-    # A few assignments so the data has every state: Dispatched, OnScene, Closed and New.
-    $assign = { param($incident, $unit) Invoke-RestMethod "$baseUrl/api/incidents/$($incident.id)/assignments" -Method Post -ContentType 'application/json' -Body (@{ unitId = $unit.id } | ConvertTo-Json) | Out-Null }
-    $status = { param($incident, $s) Invoke-RestMethod "$baseUrl/api/incidents/$($incident.id)/status" -Method Put -ContentType 'application/json' -Body (@{ status = $s } | ConvertTo-Json) | Out-Null }
-
-    & $assign $incidents[0] $units[0]
-    & $assign $incidents[0] $units[4]
-    & $assign $incidents[1] $units[2]
-    & $status $incidents[1] 'OnScene'
-    & $assign $incidents[2] $units[3]
-    & $status $incidents[2] 'Closed'
-
-    Write-Host "  Seeded $($units.Count) units and $($incidents.Count) incidents into $baseUrl"
+    & "$PSScriptRoot\seed.ps1" -BaseUrl $baseUrl
 }
 
 $apis = @('http://localhost:8080')

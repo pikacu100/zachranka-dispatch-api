@@ -48,6 +48,14 @@ API nad MSSQL: http://localhost:8081/swagger. Při startu se automaticky aplikuj
 .\scripts\start.ps1 -Stop
 ```
 
+**Ukázková data** do běžícího API (desítky výjezdů ve všech stavech a prioritách):
+
+```powershell
+.\scripts\seed.ps1                                  # API z launch.json (http://localhost:5007)
+.\scripts\seed.ps1 -BaseUrl http://localhost:8080   # API v Dockeru
+.\scripts\seed.ps1 -Incidents 60 -Units 30
+```
+
 **Testy:**
 
 ```bash
